@@ -53,11 +53,6 @@ def dp():
             break
         
         del unvisited_vertices[current_vertex]
-        if create_video:
-            current_vertex_x, current_vertex_y = coordinates[current_vertex]
-            axis.scatter(current_vertex_x, current_vertex_y, s=30, color='deepskyblue', zorder=2)
-            plt.draw()
-            writer.grab_frame()
 
         current_vertex_edges = edges[current_vertex]
         
@@ -71,16 +66,8 @@ def dp():
                 if new_vertex_weight < unvisited_vertices[edge_head]:
                     unvisited_vertices[edge_head] = new_vertex_weight
                     previous_vertices[edge_head] = current_vertex
-            
-            if create_video:
-                current_vertex_x, current_vertex_y = coordinates[current_vertex]
-                head_x, head_y = coordinates[edge_head]
-                axis.plot([current_vertex_x, head_x], [current_vertex_y, head_y], 'aqua', linestyle='-', linewidth=1, zorder=0)
-                plt.draw()
-                writer.grab_frame()
-                plt.pause(0.01)
 
-    return total_weight, previous_vertices, axis
+    return total_weight, previous_vertices
 
 def getShortestPathAndWeight(previous_vertices, total_weight):
     shortest_path = [goal_vertex]
@@ -90,7 +77,6 @@ def getShortestPathAndWeight(previous_vertices, total_weight):
 
     while current_vertex != start_vertex:
         previous_vertex = current_vertex
-        current_vertex_x, current_vertex_y = coordinates[current_vertex]
         current_vertex = previous_vertices[current_vertex]
 
         for edge in edges[previous_vertex]:
@@ -99,13 +85,7 @@ def getShortestPathAndWeight(previous_vertices, total_weight):
                 weight_path.insert(0, current_weight)
 
         shortest_path.insert(0, current_vertex)
-        if create_video:
-            previous_vertex_x, previous_vertex_y = coordinates[current_vertex]
-            axis.scatter(current_vertex_x, current_vertex_y, s=30, color='lime', zorder=3)
-            axis.plot([current_vertex_x, previous_vertex_x], [current_vertex_y, previous_vertex_y], 'lime', linestyle='-', linewidth=1, zorder=4)
-            plt.draw()
-            writer.grab_frame()
-            plt.pause(0.3)
+        
     return shortest_path, weight_path
     
 def createOutputFile(shortest_path, weight_path):
@@ -125,67 +105,10 @@ def createOutputFile(shortest_path, weight_path):
 
     output_file.close()
 
-def createGraph():
-    graph = {}
-
-    for edge in edges.items():
-        tail_coordinate = coordinates[edge[0]]
-        
-        for head in edge[1]:
-            head_coordinate = head[0]
-
-            if tail_coordinate in graph:
-                graph[tail_coordinate].append(coordinates[head_coordinate])
-
-            else:
-                graph[tail_coordinate] = [coordinates[head_coordinate]]
-    return graph
-
-def plotGraph(unvisited_graph):
-    unvisited_vertices = list(unvisited_graph.keys())
-    graph_edges = []
-    
-    for vertex, edge in unvisited_graph.items():
-        for neighbor in edge:
-            graph_edges.append((vertex, neighbor))
-
-    # Draw edges
-    for (vertex1, vertex2) in graph_edges:
-        x_coords = [vertex1[0], vertex2[0]]
-        y_coords = [vertex1[1], vertex2[1]]
-        axis.plot(x_coords, y_coords, 'grey', linestyle='-', linewidth=1, zorder=0)
-
-    # Draw vertices
-    x_coords, y_coords = zip(*unvisited_vertices)
-    axis.scatter(x_coords, y_coords, s=30, color='black', zorder=1)
-
-    # Make start and goal vertices different from the rest
-    start_x_coords = [coordinates[start_vertex][0]]
-    start_y_coords = [coordinates[start_vertex][1]]
-    axis.scatter(start_x_coords, start_y_coords, s=30, color='lime', zorder=3)
-    end_x_coords = [coordinates[goal_vertex][0]]
-    end_y_coords = [coordinates[goal_vertex][1]]
-    axis.scatter(end_x_coords, end_y_coords, s=30, color='red', zorder=3)
-
-    axis.set_aspect('equal')
-
-    # Show plot
-    plt.grid(False)
-    plt.draw()
-    writer.grab_frame()
-    return axis
-
 def main() :
     readInputFile()
-    readCoordinateFile()
-
-    if create_video:
-        with writer.saving(fig, "017856202.mp4", 100): 
-            total_weight, previous_vertices, axis = dijkstra()
-            shortest_path, weight_path = getShortestPathAndWeight(previous_vertices, total_weight)
-    else:
-        total_weight, previous_vertices, axis = dijkstra()
-        shortest_path, weight_path = getShortestPathAndWeight(previous_vertices, total_weight)
+    total_weight, previous_vertices = dp()
+    shortest_path, weight_path = getShortestPathAndWeight(previous_vertices, total_weight)
     createOutputFile(shortest_path, weight_path)
 
 main()
