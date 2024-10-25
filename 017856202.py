@@ -35,70 +35,37 @@ def getEdges(input_edges):
                 edges[edge_tail] = [(edge_head, edge_weight)]
 
 def dp():
-    total_weight = float('inf')
-    unvisited_vertices = {}
-    previous_vertices = {}
+    result = {}
+    prev = {}
+    for vertex in edges.keys():
+        result[vertex] = float('inf')
+        prev[vertex] = -1
     
-    while len(unvisited_vertices) > 0:
-        vertex_weights = list(unvisited_vertices.values())
+    result[start_vertex] = 0
+    for i in range (len(edges.keys())):
+        for tail, heads in edges.items():
+            for head in heads:
+                weight = head[1] + result[tail]
+                if weight < result[head[0]]:
+                    result[head[0]] = weight
+                    if i == 0:
+                        prev[head[0]] = tail
+    return result, prev
     
-        if vertex_weights.count(float('inf')) == len(vertex_weights):
-            break
-        
-        current_weight = min(vertex_weights)
-        current_vertex = [i for i in unvisited_vertices if unvisited_vertices[i] == current_weight][0]
-        
-        if current_vertex == goal_vertex:
-            total_weight = current_weight
-            break
-        
-        del unvisited_vertices[current_vertex]
-
-        current_vertex_edges = edges[current_vertex]
-        
-        for edge in current_vertex_edges:
-            edge_head = edge[0]
-            edge_weight = edge[1]
-            
-            if edge_head in unvisited_vertices:
-                new_vertex_weight = round(current_weight+edge_weight, 2)
-                
-                if new_vertex_weight < unvisited_vertices[edge_head]:
-                    unvisited_vertices[edge_head] = new_vertex_weight
-                    previous_vertices[edge_head] = current_vertex
-
-    return total_weight, previous_vertices
-
-def getShortestPathAndWeight(previous_vertices, total_weight):
-    shortest_path = [goal_vertex]
-    current_vertex = goal_vertex
-    weight_path = [total_weight]
-    current_weight = total_weight
-
-    while current_vertex != start_vertex:
-        previous_vertex = current_vertex
-        current_vertex = previous_vertices[current_vertex]
-
-        for edge in edges[previous_vertex]:
-            if edge[0] == current_vertex:
-                current_weight = round(current_weight-edge[1], 2)
-                weight_path.insert(0, current_weight)
-
-        shortest_path.insert(0, current_vertex)
-        
-    return shortest_path, weight_path
-    
-def createOutputFile(shortest_path, weight_path):
+def createOutputFile(result, prev):
     output_file = open("017856202.txt", "w")
     shortest_path_string = ""
     weight_path_string = ""
     
-    for vertex in shortest_path:
-        shortest_path_string += str(vertex) + " "
-    
-    for weight in weight_path: 
-        weight_path_string += str(weight) + " "
-    
+    current = goal_vertex
+    while current != start_vertex:
+        shortest_path_string = str(current) + " " + shortest_path_string
+        weight_path_string = str(round(result[current], 2)) + " " + weight_path_string
+        current= prev[current]
+
+    shortest_path_string = str(current) + " " + shortest_path_string
+    weight_path_string = str(result[current]) + " " + weight_path_string
+
     output_file.write(shortest_path_string[:-1]) # removing last character because it will be a space from the loop
     output_file.write("\n")
     output_file.write(weight_path_string[:-1]) # removing last character because it will be a space from the loop
@@ -107,8 +74,7 @@ def createOutputFile(shortest_path, weight_path):
 
 def main() :
     readInputFile()
-    total_weight, previous_vertices = dp()
-    shortest_path, weight_path = getShortestPathAndWeight(previous_vertices, total_weight)
-    createOutputFile(shortest_path, weight_path)
+    result, prev = dp()
+    createOutputFile(result, prev)
 
 main()
