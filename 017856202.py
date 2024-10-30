@@ -36,8 +36,10 @@ def getEdges(input_edges):
 
 def dp():
     result = {}
+    prev = {}
     for vertex in edges.keys():
         result[vertex] = float('inf')
+        prev[vertex] = float('inf')
     
     result[start_vertex] = 0
     for i in range (len(edges.keys())):
@@ -45,18 +47,25 @@ def dp():
             for head in heads:
                 weight = head[1] + result[tail]
                 if weight < result[head[0]]:
-                    result[head[0]] = weight
-                    
-    return result
+                    head_vertex = head[0]
+                    result[head_vertex] = weight 
+                    prev[head_vertex] = tail     
+    return result, prev
     
-def createOutputFile(result):
+def createOutputFile(result, prev):
     output_file = open("017856202.txt", "w")
     shortest_path_string = ""
     weight_path_string = ""
     
     for current, weight in result.items():
-        shortest_path_string += str(current) + " " 
         weight_path_string += str(round(weight, 2)) + " " 
+    
+    cur = goal_vertex
+    while cur != start_vertex:
+        shortest_path_string = str(cur) + " " + shortest_path_string
+        cur = prev[cur]
+
+    shortest_path_string = str(cur) + " " + shortest_path_string
 
     output_file.write(shortest_path_string[:-1]) # removing last character because it will be a space from the loop
     output_file.write("\n")
@@ -66,7 +75,7 @@ def createOutputFile(result):
 
 def main() :
     readInputFile()
-    result = dp()
-    createOutputFile(result)
+    result , prev= dp()
+    createOutputFile(result, prev)
 
 main()
